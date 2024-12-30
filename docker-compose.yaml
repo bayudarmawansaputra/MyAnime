@@ -1,0 +1,25 @@
+services:
+  zannime:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile.zannime
+    container_name: zannime
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://wajik-anime-api:3001
+    depends_on:
+      - wajik-anime-api
+
+  wajik-anime-api:
+    build:
+      context: wajik-anime-api
+      dockerfile: ../dockerfiles/Dockerfile.wajik-anime-api
+    container_name: wajik-anime-api
+    restart: unless-stopped
+    expose:
+      - 3001
+    environment:
+      - NODE_ENV=production

@@ -1,0 +1,32 @@
+<%- include('partials/header', { title: 'Anime Schedule - MyAnime' }) %>
+<div class="container">
+  <h1 class="mt-4">Anime Release Schedule</h1>
+  <% schedule.days.forEach(day => { %>
+    <div class="day-schedule card mt-3">
+      <div class="card-body">
+        <h2 class="card-title"><%= day.day %></h2>
+        <p class="card-text">
+          <% day.animeList.forEach((anime) => { %>
+            <a href="/anime/<%= anime.animeId %>" class="badge bg-dark me-1 text-decoration-none long-badge"><%= anime.title %></a>
+          <% }) %>
+        </p>
+      </div>
+    </div>
+  <% }) %>
+</div>
+<br>
+<%- include('partials/footer') %>
+<!-- Bootstrap JS -->
+<script src="/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+<style>
+  .long-badge {
+    margin: 2px;
+    word-wrap: break-word;
+    white-space: normal;
+    display: inline-block;
+    max-width: 100%;
+  }
+</style>

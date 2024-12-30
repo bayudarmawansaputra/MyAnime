@@ -1,0 +1,205 @@
+<%- include('partials/header', { title: anime.title + ' - MyAnime' }) %>
+
+<!-- Main Wrapper with Bootstrap Flex Classes -->
+<div class="d-flex flex-column min-vh-100">
+
+  <!-- Main Content Container -->
+  <div class="container mt-5 flex-grow-1">
+    <div class="row">
+      <!-- Anime Poster -->
+      <div class="col-md-4">
+        <div class="card shadow-sm position-relative">
+          <!-- Poster Image -->
+          <img src="<%= anime.poster %>" alt="<%= anime.title %>" class="img-fluid rounded">
+
+          <!-- Score Overlay (Top Left) -->
+          <div class="position-absolute top-0 start-0 p-2">
+              <span class="badge text-dark bg-white fs-6"><%= anime.score %></span>
+          </div>
+
+          <!-- Status Overlay (Bottom Right) -->
+          <div class="position-absolute bottom-0 end-0 p-2">
+              <span class="badge text-dark bg-white fs-6"><%= anime.status %></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Anime Details -->
+      <div class="col-md-8">
+        <h1 class="display-4"><%= anime.title %></h1>
+        <div class="my-3">
+          <p><strong>Japanese:</strong> <%= anime.japanese %></p>
+          <p><strong>Producer:</strong> <%= anime.producers %></p>
+          <p><strong>Type:</strong> <%= anime.type %></p>
+          <p><strong>Total Episodes:</strong> <%= anime.episodes %></p>
+          <p><strong>Duration:</strong> <%= anime.duration %></p>
+          <p><strong>Release Date:</strong> <%= anime.aired %></p>
+          <p><strong>Studio:</strong> <%= anime.studios %></p>
+          <p><strong>Genres:</strong></p>
+          <ul class="list-inline">
+            <% anime.genreList.forEach(genre => { %>
+              <li class="list-inline-item"><a href="/genres/<%= genre.genreId %>" class="btn btn-outline-dark btn-sm"><%= genre.title %></a></li>
+            <% }) %>
+          </ul>
+        </div>
+
+        <!-- Synopsis -->
+        <div class="my-4">
+          <h4>Synopsis</h4>
+          <p class="text-justify"><%= anime.synopsis.paragraphs.join(' ') %></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Redesigned Batch Information Section -->
+    <div class="my-4">
+      <h5 class="fw-bold">Download Batch</h5>
+      <div class="d-flex justify-content-between align-items-center border p-3 rounded bg-light">
+        <% if (anime.batch) { %>
+          <span><%= anime.batch.title %></span>
+          <% if (!anime.batch.linkGenerated) { %>
+            <button id="generateLinkBtn" class="btn btn-dark btn-sm" data-batch-id="<%= anime.batch.batchId %>">
+              <i class="bi bi-download me-1"></i>Generate Link
+            </button>
+          <% } else { %>
+            <button class="btn btn-dark btn-sm" disabled>
+              <i class="bi bi-download me-1"></i>Link Generated
+            </button>
+          <% } %>
+        <% } else { %>
+          <span class="text-muted">No batch available at the moment.</span>
+        <% } %>
+      </div>
+      <div id="downloadOptions" class="mt-3" style="display: none;">
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <thead class="table-dark">
+              <tr>
+                <th scope="col">Quality</th>
+                <th scope="col">Size</th>
+                <th scope="col">Download Links</th>
+              </tr>
+            </thead>
+            <tbody id="downloadLinksTableBody">
+              <!-- Download links will be populated here -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Watch Episodes Section as Responsive Table -->
+    <div class="my-4">
+      <h5 class="fw-bold">Watch Episodes</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th scope="col">Episode</th>
+              <th scope="col" class="text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (anime.episodeList.length > 0) { %>
+              <% anime.episodeList.forEach(episode => { %>
+                <tr>
+                  <!-- Episode Title -->
+                  <td><%= anime.title %> Episode <%= episode.title %></td>
+                  
+                  <!-- Centered Watch Button -->
+                  <td class="text-center">
+                    <a href="/episode/<%= episode.episodeId %>" class="btn btn-dark btn-sm">
+                      <i class="bi bi-play-fill me-1"></i>Watch Now
+                    </a>
+                  </td>
+                </tr>
+              <% }) %>
+            <% } else { %>
+              <tr>
+                <td colspan="2" class="text-muted text-center">No episodes available.</td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div> <!-- End of Main Content Container -->
+
+  <!-- Footer (this stays at the bottom) -->
+  <%- include('partials/footer') %>
+
+</div> <!-- End of Main Wrapper -->
+
+<!-- Bootstrap JS -->
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script>
+  document.getElementById('generateLinkBtn').addEventListener('click', function() {
+    const batchId = this.getAttribute('data-batch-id');
+    fetch(`/batch/${batchId}`)
+      .then(response => response.json())
+      .then(data => {
+        if (data.downloadUrl && data.downloadUrl.formats) {
+          const formats = data.downloadUrl.formats;
+          const tableBody = document.getElementById('downloadLinksTableBody');
+
+          // Clear previous rows
+          tableBody.innerHTML = '';
+
+          // Populate the table with formats and qualities
+          formats.forEach(format => {
+            format.qualities.forEach(quality => {
+              const row = document.createElement('tr');
+
+              // Quality Badge
+              const qualityCell = document.createElement('td');
+              const qualityBadge = document.createElement('span');
+              qualityBadge.className = 'badge bg-dark fs-6';
+              qualityBadge.textContent = quality.title;
+              qualityCell.appendChild(qualityBadge);
+              row.appendChild(qualityCell);
+
+              // Size Badge
+              const sizeCell = document.createElement('td');
+              sizeCell.textContent = quality.size;
+              row.appendChild(sizeCell);
+
+              // Download Links as Buttons
+              const linksCell = document.createElement('td');
+              const linksDiv = document.createElement('div');
+              linksDiv.className = 'd-flex flex-wrap gap-2';
+
+              quality.urls.forEach(url => {
+                const linkButton = document.createElement('a');
+                linkButton.href = url.url;
+                linkButton.target = '_blank';
+                linkButton.className = 'btn btn-sm btn-outline-dark';
+                const icon = document.createElement('i');
+                icon.className = 'bi bi-download me-1';
+                linkButton.appendChild(icon);
+                linkButton.appendChild(document.createTextNode(url.title));
+                linksDiv.appendChild(linkButton);
+              });
+
+              linksCell.appendChild(linksDiv);
+              row.appendChild(linksCell);
+
+              tableBody.appendChild(row);
+            });
+          });
+
+          document.getElementById('downloadOptions').style.display = 'block';
+          this.disabled = true;
+          this.textContent = 'Link Generated';
+        } else {
+          alert('Download options not available.');
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching download options:', error);
+        alert('Error fetching download options.');
+      });
+  });
+</script>
+</body>
+</html>
