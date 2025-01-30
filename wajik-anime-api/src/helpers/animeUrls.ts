@@ -1,6 +1,6 @@
 const animeUrls = {
   otakudesu: "https://otakudesu.cloud",
-  samehadaku: "https://samehadaku.email",
+  samehadaku: "https://samehadaku.mba",
 };
 
 export default animeUrls;
